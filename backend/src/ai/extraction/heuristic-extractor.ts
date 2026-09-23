@@ -3,15 +3,21 @@ import type { RefundReason } from '../../policy/engine/types.js';
 import type { ConversationTurn, ExtractionResult, OrderContext } from './extraction.types.js';
 
 const REASON_KEYWORDS: Array<{ reason: RefundReason; patterns: RegExp[] }> = [
-  { reason: 'not_received', patterns: [/never arrived/i, /never received/i, /didn'?t (arrive|receive)/i, /hasn'?t arrived/i] },
+  { reason: 'not_received', patterns: [/never arrived/i, /never received/i, /didn'?t (arrive|receive)/i, /hasn'?t arrived/i, /haven'?t (arrived|received)/i] },
   { reason: 'damaged', patterns: [/damag/i, /broken/i, /crack/i, /shattered/i, /torn/i] },
-  { reason: 'defective', patterns: [/defect/i, /doesn'?t work/i, /won'?t (turn on|charge|start)/i, /stopped working/i, /malfunction/i] },
+  { reason: 'defective', patterns: [/defect/i, /doesn'?t work/i, /won'?t (turn on|charge|start)/i, /stopped (working|charging)/i, /malfunction/i, /rattl/i] },
   { reason: 'wrong_item', patterns: [/wrong (item|size|color)/i, /sent (me |us )?a? ?(size|color)?\s*\d*\s*(instead)/i, /not what i ordered/i] },
   { reason: 'not_as_described', patterns: [/not as described/i, /doesn'?t match the (listing|description|photos?)/i] },
-  { reason: 'changed_mind', patterns: [/change(d)? my mind/i, /don'?t want it/i, /doesn'?t fit/i, /no longer need/i] },
+  { reason: 'changed_mind', patterns: [/change(d)? my mind/i, /don'?t want (it|this|the)/i, /doesn'?t fit/i, /no longer (need|want)/i] },
 ];
 
 const ORDER_NUMBER_PATTERN = /\bORD-\d{4,}\b/i;
+
+/** Whole-word overlap rather than a full-name substring match, so "the skillet" matches "Cast iron skillet". */
+function itemMatchesText(itemName: string, lowerCaseText: string): boolean {
+  const words = itemName.toLowerCase().split(/\s+/).filter((word) => word.length >= 4);
+  return words.some((word) => new RegExp(`\\b${word}\\b`).test(lowerCaseText));
+}
 
 /**
  * Used only when the LLM is unavailable or its output fails validation.
@@ -42,9 +48,8 @@ export class HeuristicExtractor {
 
     let items: ExtractionResult['items'] = [];
     if (order) {
-      const matchedByName = order.items.filter((item) =>
-        text.toLowerCase().includes(item.name.toLowerCase()),
-      );
+      const lowerText = text.toLowerCase();
+      const matchedByName = order.items.filter((item) => itemMatchesText(item.name, lowerText));
       const candidates = matchedByName.length > 0 ? matchedByName : order.items.length === 1 ? order.items : [];
       if (candidates.length === 0) {
         missing.push('items');
