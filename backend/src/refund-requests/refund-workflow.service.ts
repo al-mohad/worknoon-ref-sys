@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { ClaimExtractorService } from '../ai/extraction/claim-extractor.service.js';
 import type { ConversationTurn, ExtractionResult, OrderContext } from '../ai/extraction/extraction.types.js';
 import { ReplyWriterService } from '../ai/replies/reply-writer.service.js';
-import { nextStepsFor, reasonCodesToText } from '../ai/replies/templates.js';
+import { nextStepsFor, reasonCodesToText, renderOrderQuestionAnswer } from '../ai/replies/templates.js';
 import type { DecisionFacts } from '../ai/replies/reply.types.js';
 import { Clock } from '../common/clock.js';
 import { formatCents } from '../common/money.js';
@@ -128,14 +128,22 @@ export class RefundWorkflowService {
       }
     }
 
-    if (extraction.value.intent !== 'refund_request') {
+    if (extraction.value.intent === 'order_question') {
       request.messages.push({
         id: randomUUID(),
         role: 'assistant',
-        content:
-          extraction.value.intent === 'order_question'
-            ? "I can help with refunds here - for general order questions, our support team can follow up by email. If you'd like a refund, tell me what's wrong with the item."
-            : "I'm set up to help with refund requests. If you'd like a refund for an order, tell me which order and what's wrong with it.",
+        content: renderOrderQuestionAnswer(orderContexts, extraction.value.orderNumber),
+        createdAt: now,
+      });
+      await request.save();
+      return request;
+    }
+
+    if (extraction.value.intent === 'other') {
+      request.messages.push({
+        id: randomUUID(),
+        role: 'assistant',
+        content: "I'm set up to help with refund requests. If you'd like a refund for an order, tell me which order and what's wrong with it.",
         createdAt: now,
       });
       await request.save();

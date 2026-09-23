@@ -32,4 +32,25 @@ describe('HeuristicExtractor', () => {
     const result = extractor.extract([ORDER, other], [{ role: 'customer', content: 'It broke' }]);
     expect(result.missing).toContain('order');
   });
+
+  it('classifies "list my orders" as an order question, not a refund claim', () => {
+    const result = extractor.extract([ORDER], [{ role: 'customer', content: 'Can you list my orders?' }]);
+    expect(result.intent).toBe('order_question');
+    expect(result.items).toEqual([]);
+  });
+
+  it('carries the named order number on an order question', () => {
+    const result = extractor.extract(
+      [ORDER],
+      [{ role: 'customer', content: 'What is the status of ORD-10198?' }],
+    );
+    expect(result.intent).toBe('order_question');
+    expect(result.orderNumber).toBe('ORD-10198');
+  });
+
+  it('does not treat "my order never arrived" as an order question', () => {
+    const result = extractor.extract([ORDER], [{ role: 'customer', content: 'My order never arrived' }]);
+    expect(result.intent).not.toBe('order_question');
+    expect(result.items[0]?.reason).toBe('not_received');
+  });
 });

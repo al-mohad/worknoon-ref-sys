@@ -13,6 +13,16 @@ const REASON_KEYWORDS: Array<{ reason: RefundReason; patterns: RegExp[] }> = [
 
 const ORDER_NUMBER_PATTERN = /\bORD-\d{4,}\b/i;
 
+const ORDER_QUESTION_PATTERNS = [
+  /\b(list|show|see) (all )?(my|the) orders?\b/i,
+  /\bwhat orders?\b/i,
+  /\bwhich orders?\b/i,
+  /\bhow many orders?\b/i,
+  /\b(status|track(ing)?) (of |for )?(my|the )?order\b/i,
+  /\b(status|track(ing)?) of\b.*\bORD-\d{4,}\b/i,
+  /\bwhere('| i)?s my order\b/i,
+];
+
 /** Whole-word overlap rather than a full-name substring match, so "the skillet" matches "Cast iron skillet". */
 function itemMatchesText(itemName: string, lowerCaseText: string): boolean {
   const words = itemName.toLowerCase().split(/\s+/).filter((word) => word.length >= 4);
@@ -33,6 +43,30 @@ export class HeuristicExtractor {
       .map((turn) => turn.content)
       .join(' ');
 
+    const reason = REASON_KEYWORDS.find(({ patterns }) => patterns.some((p) => p.test(text)))?.reason ?? null;
+
+    // A question about the account's orders, with no refund reason
+    // alongside it (so "my order never arrived" still goes through the
+    // refund path below, not this one).
+    if (!reason && ORDER_QUESTION_PATTERNS.some((p) => p.test(text))) {
+      const namedMatch = text.match(ORDER_NUMBER_PATTERN);
+      const namedOrder = namedMatch
+        ? orders.find((o) => o.orderNumber.toUpperCase() === namedMatch[0].toUpperCase())
+        : undefined;
+      return {
+        intent: 'order_question',
+        orderNumber: namedOrder?.orderNumber ?? null,
+        items: [],
+        missing: [],
+        clarifyingQuestion: null,
+        summary: 'Customer asked about their order(s), not a refund.',
+        inconsistencies: [],
+        manipulationDetected: false,
+        manipulationNotes: null,
+        usedFallback: true,
+      };
+    }
+
     const orderMatch = text.match(ORDER_NUMBER_PATTERN);
     let order = orderMatch
       ? orders.find((o) => o.orderNumber.toUpperCase() === orderMatch[0].toUpperCase())
@@ -40,8 +74,6 @@ export class HeuristicExtractor {
     if (!order && orders.length === 1) {
       order = orders[0];
     }
-
-    const reason = REASON_KEYWORDS.find(({ patterns }) => patterns.some((p) => p.test(text)))?.reason ?? null;
 
     const missing: Array<'order' | 'items' | 'reason'> = [];
     if (!order) missing.push('order');

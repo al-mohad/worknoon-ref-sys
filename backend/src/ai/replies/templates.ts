@@ -1,5 +1,13 @@
+import type { OrderContext } from '../extraction/extraction.types.js';
 import type { ReasonCode, RefundOutcome } from '../../policy/engine/types.js';
 import type { DecisionFacts } from './reply.types.js';
+
+const ORDER_STATUS_TEXT: Record<string, string> = {
+  processing: 'being prepared, not shipped yet',
+  in_transit: 'on its way',
+  delivered: 'delivered',
+  cancelled: 'cancelled',
+};
 
 /**
  * Customer-facing text for each reason code, written and reviewed once by
@@ -57,4 +65,38 @@ export function renderTemplateReply(facts: DecisionFacts): string {
 
 export function renderClarifyingTemplate(question: string): string {
   return question;
+}
+
+function itemsSummary(items: OrderContext['items']): string {
+  return items.map((item) => (item.quantity > 1 ? `${item.name} x${item.quantity}` : item.name)).join(', ');
+}
+
+/**
+ * Answers "what orders do I have" / "what's the status of my order"
+ * entirely from the customer's own order data - no model call, so it
+ * can't misstate a date, a status or an item. If a specific order was
+ * named, only that order is described; otherwise every order is listed.
+ */
+export function renderOrderQuestionAnswer(orders: OrderContext[], resolvedOrderNumber: string | null): string {
+  if (orders.length === 0) {
+    return "I don't see any orders on this account yet.";
+  }
+
+  const scoped = resolvedOrderNumber ? orders.filter((o) => o.orderNumber === resolvedOrderNumber) : orders;
+  if (scoped.length === 0) {
+    return "I couldn't find that order on this account. Here's what I do see:\n" + renderOrderQuestionAnswer(orders, null);
+  }
+
+  const lines = scoped.map((order) => {
+    const status = ORDER_STATUS_TEXT[order.status] ?? order.status;
+    const delivered = order.deliveredAt ? `, delivered ${order.deliveredAt.slice(0, 10)}` : '';
+    return `- ${order.orderNumber}: ${status}${delivered} - ${itemsSummary(order.items)}`;
+  });
+
+  const intro =
+    resolvedOrderNumber && scoped.length === 1
+      ? `Here's that order:`
+      : `Here's what's on this account (${scoped.length} order${scoped.length === 1 ? '' : 's'}):`;
+
+  return `${intro}\n${lines.join('\n')}\n\nWant a refund for any of these? Just tell me what's wrong with it.`;
 }
