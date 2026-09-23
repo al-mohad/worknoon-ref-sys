@@ -8,8 +8,13 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
-interface RequestWithId extends Request {
-  id?: string;
+/** "NOT_FOUND" -> "Not Found" - HttpStatus[code] gives the enum key, not a human title. */
+function titleCase(enumKey: string | undefined): string | undefined {
+  return enumKey
+    ?.toLowerCase()
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 /**
@@ -24,7 +29,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<RequestWithId>();
+    const request = ctx.getRequest<Request>();
 
     const { status, title, detail } = this.describe(exception);
 
@@ -52,7 +57,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
           : (Array.isArray((body as { message?: unknown }).message)
               ? (body as { message: string[] }).message.join('; ')
               : ((body as { message?: string }).message ?? exception.message));
-      return { status, title: HttpStatus[status] ?? exception.name, detail };
+      return { status, title: titleCase(HttpStatus[status]) ?? exception.name, detail };
     }
 
     return {

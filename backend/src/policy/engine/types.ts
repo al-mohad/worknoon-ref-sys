@@ -64,6 +64,7 @@ export type LineOutcome = 'approved' | 'denied' | 'escalated';
 
 export interface LineResult {
   sku: string;
+  name: string;
   quantity: number;
   reason: RefundReason;
   outcome: LineOutcome;
@@ -101,7 +102,6 @@ export interface OrderFacts {
   placedAt: Date;
   deliveredAt?: Date;
   estimatedDeliveryAt?: Date;
-  trackingStatus?: 'in_transit' | 'delivered';
   items: OrderItemFacts[];
 }
 

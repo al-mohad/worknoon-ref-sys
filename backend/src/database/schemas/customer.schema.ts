@@ -14,7 +14,7 @@ export class Customer {
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email!: string;
 
-  @Prop({ required: true, enum: ['standard', 'plus'] })
+  @Prop({ required: true, type: String, enum: ['standard', 'plus'] })
   tier!: CustomerTier;
 
   @Prop({ required: true })

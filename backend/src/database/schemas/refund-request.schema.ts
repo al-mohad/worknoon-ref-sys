@@ -10,7 +10,7 @@ export class Message {
   @Prop({ required: true })
   id!: string;
 
-  @Prop({ required: true, enum: ['customer', 'assistant', 'agent_note'] })
+  @Prop({ required: true, type: String, enum: ['customer', 'assistant', 'agent_note'] })
   role!: MessageRole;
 
   @Prop({ required: true })
@@ -18,6 +18,10 @@ export class Message {
 
   @Prop({ required: true })
   createdAt!: Date;
+
+  /** Only set on customer-sent messages; used to make a resubmitted POST a no-op. */
+  @Prop()
+  clientMessageId?: string;
 }
 const MessageSchema = SchemaFactory.createForClass(Message);
 
@@ -29,7 +33,7 @@ export class ClaimItemDoc {
   @Prop({ required: true })
   quantity!: number;
 
-  @Prop({ required: true, enum: REFUND_REASONS })
+  @Prop({ required: true, type: String, enum: REFUND_REASONS })
   reason!: string;
 }
 const ClaimItemSchema = SchemaFactory.createForClass(ClaimItemDoc);
@@ -60,19 +64,19 @@ const SignalsSchema = SchemaFactory.createForClass(Signals);
 
 @Schema({ _id: false })
 export class CheckDoc {
-  @Prop({ required: true, enum: RULE_IDS })
+  @Prop({ required: true, type: String, enum: RULE_IDS })
   rule!: string;
 
-  @Prop({ required: true, enum: ['request', 'item'] })
+  @Prop({ required: true, type: String, enum: ['request', 'item'] })
   scope!: 'request' | 'item';
 
   @Prop()
   sku?: string;
 
-  @Prop({ required: true, enum: ['pass', 'deny', 'escalate', 'not_applicable'] })
+  @Prop({ required: true, type: String, enum: ['pass', 'deny', 'escalate', 'not_applicable'] })
   result!: string;
 
-  @Prop({ enum: REASON_CODES })
+  @Prop({ type: String, enum: REASON_CODES })
   code?: string;
 
   @Prop({ required: true })
@@ -86,12 +90,15 @@ export class LineResultDoc {
   sku!: string;
 
   @Prop({ required: true })
+  name!: string;
+
+  @Prop({ required: true })
   quantity!: number;
 
-  @Prop({ required: true, enum: REFUND_REASONS })
+  @Prop({ required: true, type: String, enum: REFUND_REASONS })
   reason!: string;
 
-  @Prop({ required: true, enum: ['approved', 'denied', 'escalated'] })
+  @Prop({ required: true, type: String, enum: ['approved', 'denied', 'escalated'] })
   outcome!: string;
 
   @Prop({ type: [String], default: [] })
@@ -123,7 +130,7 @@ const EvaluationSchema = SchemaFactory.createForClass(Evaluation);
 
 @Schema({ _id: false })
 export class Decision {
-  @Prop({ required: true, enum: ['APPROVED', 'DENIED', 'ESCALATED'] })
+  @Prop({ required: true, type: String, enum: ['APPROVED', 'DENIED', 'ESCALATED'] })
   outcome!: 'APPROVED' | 'DENIED' | 'ESCALATED';
 
   @Prop({ type: [String], enum: REASON_CODES, default: [] })
@@ -136,7 +143,7 @@ const DecisionSchema = SchemaFactory.createForClass(Decision);
 
 @Schema({ _id: false })
 export class ResolvedBy {
-  @Prop({ required: true, enum: ['system', 'agent'] })
+  @Prop({ required: true, type: String, enum: ['system', 'agent'] })
   type!: 'system' | 'agent';
 
   @Prop({ type: Types.ObjectId, ref: 'Agent' })
@@ -149,7 +156,7 @@ const ResolvedBySchema = SchemaFactory.createForClass(ResolvedBy);
 
 @Schema({ _id: false })
 export class Resolution {
-  @Prop({ required: true, enum: ['APPROVED', 'DENIED'] })
+  @Prop({ required: true, type: String, enum: ['APPROVED', 'DENIED'] })
   outcome!: 'APPROVED' | 'DENIED';
 
   @Prop({ required: true })
@@ -171,13 +178,13 @@ export class AiStep {
   @Prop({ required: true })
   step!: string;
 
-  @Prop({ required: true, enum: ['anthropic', 'openai', 'heuristic'] })
+  @Prop({ required: true, type: String, enum: ['anthropic', 'openai', 'heuristic'] })
   provider!: string;
 
   @Prop()
   model?: string;
 
-  @Prop({ required: true, enum: ['ok', 'fallback', 'error'] })
+  @Prop({ required: true, type: String, enum: ['ok', 'fallback', 'error'] })
   status!: string;
 
   @Prop({ default: false })
@@ -218,11 +225,12 @@ export class RefundRequest {
   @Prop()
   orderNumber?: string;
 
-  @Prop({ required: true, enum: ['chat', 'email'], default: 'chat' })
+  @Prop({ required: true, type: String, enum: ['chat', 'email'], default: 'chat' })
   channel!: 'chat' | 'email';
 
   @Prop({
     required: true,
+    type: String,
     enum: ['collecting_info', 'awaiting_review', 'resolved'],
     default: 'collecting_info',
     index: true,

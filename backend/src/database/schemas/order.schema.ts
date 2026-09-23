@@ -44,7 +44,7 @@ export class Order {
   @Prop({ required: true, type: Types.ObjectId, ref: 'Customer', index: true })
   customerId!: Types.ObjectId;
 
-  @Prop({ required: true, enum: ['processing', 'in_transit', 'delivered', 'cancelled'] })
+  @Prop({ required: true, type: String, enum: ['processing', 'in_transit', 'delivered', 'cancelled'] })
   status!: OrderStatus;
 
   @Prop({ required: true })

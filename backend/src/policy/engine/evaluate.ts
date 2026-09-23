@@ -64,6 +64,7 @@ export function evaluate(input: EvaluationInput): Evaluation {
 
     return {
       sku: item.sku,
+      name: orderItem.name,
       quantity: item.quantity,
       reason: item.reason,
       outcome,
