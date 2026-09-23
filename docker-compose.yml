@@ -1,0 +1,65 @@
+services:
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  seed:
+    build: ./backend
+    command: ["node", "dist/database/seed/run-seed.js"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/refund_desk
+      AGENT_EMAIL: ${AGENT_EMAIL:-agent@example.com}
+      AGENT_PASSWORD: ${AGENT_PASSWORD:-refund-desk-demo}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/refund_desk
+      JWT_SECRET: ${JWT_SECRET:-refund-desk-demo-secret-change-me}
+      JWT_TTL: ${JWT_TTL:-2h}
+      AGENT_EMAIL: ${AGENT_EMAIL:-agent@example.com}
+      AGENT_PASSWORD: ${AGENT_PASSWORD:-refund-desk-demo}
+      LLM_PROVIDER: ${LLM_PROVIDER:-auto}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - '${API_PORT:-3000}:3000'
+    depends_on:
+      mongo:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-8080}:8080'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

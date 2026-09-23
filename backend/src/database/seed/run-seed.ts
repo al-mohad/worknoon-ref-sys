@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { hash } from 'bcryptjs';
 import mongoose from 'mongoose';
 import { AgentSchema } from '../schemas/agent.schema.js';
