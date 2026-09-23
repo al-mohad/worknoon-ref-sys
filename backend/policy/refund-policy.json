@@ -1,0 +1,12 @@
+{
+  "version": "2026-09.1",
+  "effectiveFrom": "2026-09-01",
+  "currency": "USD",
+  "refundWindowDays": 30,
+  "reviewThresholdCents": 50000,
+  "lostInTransitGraceDays": 7,
+  "refundFrequency": { "lookbackDays": 90, "reviewAt": 3 },
+  "merchantErrorReasons": ["damaged", "defective", "wrong_item", "not_as_described", "not_received"],
+  "maxClarifyingQuestions": 3,
+  "reviewTargetBusinessDays": 1
+}
