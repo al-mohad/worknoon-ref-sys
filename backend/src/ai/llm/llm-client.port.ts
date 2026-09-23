@@ -55,3 +55,10 @@ export class LlmOutputError extends Error {
 }
 
 export const LLM_CLIENT = Symbol('LLM_CLIENT');
+
+/** Unwraps the underlying SDK error's message for a log line, instead of just the wrapper's generic text. */
+export function causeMessage(cause: unknown): string {
+  if (cause instanceof Error) return cause.message;
+  if (typeof cause === 'string') return cause;
+  return 'no further detail';
+}

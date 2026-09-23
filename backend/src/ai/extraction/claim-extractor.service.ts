@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CANARY_TOKEN } from '../canary.js';
-import { LLM_CLIENT, LlmOutputError, LlmUnavailableError, type LlmClient } from '../llm/llm-client.port.js';
+import { causeMessage, LLM_CLIENT, LlmOutputError, LlmUnavailableError, type LlmClient } from '../llm/llm-client.port.js';
 import type { AiStepResult } from '../ai-step-result.js';
 import { recordRefundClaim, RECORD_REFUND_CLAIM_TOOL, type RecordRefundClaim } from './claim-extraction.schema.js';
 import { buildExtractionInput, buildExtractionSystemPrompt } from './extraction-prompt.js';
@@ -47,7 +47,7 @@ export class ClaimExtractorService {
       if (!(error instanceof LlmUnavailableError) && !(error instanceof LlmOutputError)) {
         throw error;
       }
-      this.logger.warn(`Extraction fell back to heuristics: ${error.message}`);
+      this.logger.warn(`Extraction fell back to heuristics: ${error.message} (${causeMessage(error.cause)})`);
       const value = this.heuristics.extract(orders, conversation);
       return {
         value,

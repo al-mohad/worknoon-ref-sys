@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { AiStepResult } from '../ai-step-result.js';
 import { CANARY_TOKEN } from '../canary.js';
 import { checkReply } from '../../guardrails/reply-guard.js';
-import { LLM_CLIENT, LlmOutputError, LlmUnavailableError, type LlmClient } from '../llm/llm-client.port.js';
+import { causeMessage, LLM_CLIENT, LlmOutputError, LlmUnavailableError, type LlmClient } from '../llm/llm-client.port.js';
 import { buildReplyInput, buildReplySystemPrompt } from './reply-prompt.js';
 import { renderTemplateReply } from './templates.js';
 import type { DecisionFacts } from './reply.types.js';
@@ -62,7 +62,7 @@ export class ReplyWriterService {
       if (!(error instanceof LlmUnavailableError) && !(error instanceof LlmOutputError)) {
         throw error;
       }
-      this.logger.warn(`Reply generation fell back to a template: ${error.message}`);
+      this.logger.warn(`Reply generation fell back to a template: ${error.message} (${causeMessage(error.cause)})`);
       return {
         value: renderTemplateReply(facts),
         step: 'reply',
