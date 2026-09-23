@@ -8,6 +8,6 @@ import { ReplyWriterService } from './replies/reply-writer.service.js';
 @Module({
   imports: [LlmModule],
   providers: [canaryTokenProvider, HeuristicExtractor, ClaimExtractorService, ReplyWriterService],
-  exports: [ClaimExtractorService, ReplyWriterService],
+  exports: [LlmModule, ClaimExtractorService, ReplyWriterService],
 })
 export class AiModule {}

@@ -19,8 +19,8 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "seed": "tsx src/database/seed/run-seed.ts",
-    "eval": "tsx scripts/eval.ts"
+    "seed": "nest build && node dist/database/seed/run-seed.js",
+    "eval": "nest build && node dist/scripts/eval.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
@@ -58,6 +58,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.2",
+    "dotenv": "^18.0.3",
     "oxlint": "^1.58.0",
     "oxlint-tsgolint": "^7.0.2001",
     "prettier": "^3.4.2",
