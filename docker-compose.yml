@@ -1,6 +1,8 @@
 services:
   mongo:
-    image: mongo:8.0
+    # Pinned: mongo:8.0 and mongo:latest refuse to start on Linux kernel 6.19+
+    # (MongoDB SERVER-121912), which current Docker Desktop VMs run. 8.2.12 starts on both.
+    image: mongo:8.2.12
     restart: unless-stopped
     volumes:
       - mongo-data:/data/db
