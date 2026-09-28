@@ -240,6 +240,7 @@ describe('evaluate', () => {
     const result = evaluate(baseInput({ order, items }));
     expect(result.outcome).toBe('APPROVED');
     expect(result.refundableCents).toBe(5_500);
+    expect(result.claimedCents).toBe(12_000);
     expect(result.lines.find((l) => l.sku === 'SKU-1')?.outcome).toBe('approved');
     expect(result.lines.find((l) => l.sku === 'SKU-2')?.outcome).toBe('denied');
   });

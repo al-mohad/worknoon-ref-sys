@@ -72,13 +72,13 @@ export function evaluate(input: EvaluationInput): Evaluation {
     };
   });
 
+  const lineValue = (line: LineResult) =>
+    input.order.items.find((oi) => oi.sku === line.sku)!.unitPriceCents * line.quantity;
+
+  const claimedCents = lines.reduce((sum, line) => sum + lineValue(line), 0);
   const refundableCents = requestLevelDeny
     ? 0
-    : lines.reduce((sum, line) => {
-        if (line.outcome === 'denied') return sum;
-        const orderItem = input.order.items.find((oi) => oi.sku === line.sku)!;
-        return sum + orderItem.unitPriceCents * line.quantity;
-      }, 0);
+    : lines.reduce((sum, line) => (line.outcome === 'denied' ? sum : sum + lineValue(line)), 0);
 
   const thresholdCheck = evaluateReviewThreshold(refundableCents, input.policy);
   const frequencyCheck = evaluateRefundFrequency(
@@ -102,5 +102,5 @@ export function evaluate(input: EvaluationInput): Evaluation {
 
   const reasonCodes = [...new Set(checks.flatMap((c) => (c.code ? [c.code] : [])))];
 
-  return { outcome, checks, lines, refundableCents, reasonCodes };
+  return { outcome, checks, lines, refundableCents, claimedCents, reasonCodes };
 }

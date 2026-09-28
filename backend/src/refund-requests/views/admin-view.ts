@@ -1,6 +1,7 @@
 import { formatCents } from '../../common/money.js';
 import type { CustomerDocument } from '../../database/schemas/customer.schema.js';
 import type { RefundRequestDocument } from '../../database/schemas/refund-request.schema.js';
+import { approvalRefundCents } from '../review-rules.js';
 
 /** The full picture an agent needs: signals, checks, AI steps and timeline included. */
 export function toAdminDetail(request: RefundRequestDocument, customer: CustomerDocument | null) {
@@ -27,6 +28,9 @@ export function toAdminDetail(request: RefundRequestDocument, customer: Customer
         }
       : null,
     decision: request.decision ?? null,
+    reviewRequestedAt: request.reviewRequestedAt ?? null,
+    approvalRefundCents: approvalRefundCents(request),
+    approvalRefundAmount: formatCents(approvalRefundCents(request)),
     resolution: request.resolution
       ? {
           outcome: request.resolution.outcome,

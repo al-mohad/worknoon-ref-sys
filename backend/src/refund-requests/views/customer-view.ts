@@ -1,5 +1,6 @@
 import { formatCents } from '../../common/money.js';
 import type { RefundRequestDocument } from '../../database/schemas/refund-request.schema.js';
+import { canRequestReview } from '../review-rules.js';
 
 /**
  * What a customer sees: never the policy checks, AI metadata, or signals
@@ -13,6 +14,7 @@ export function toCustomerView(request: RefundRequestDocument) {
     reference: request.reference,
     status: request.status,
     orderNumber: request.orderNumber ?? null,
+    canRequestReview: canRequestReview(request),
     messages: request.messages.map((m) => ({
       id: m.id,
       role: m.role,

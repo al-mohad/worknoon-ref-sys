@@ -35,7 +35,7 @@ const REASON_TEXT: Record<ReasonCode, string> = {
 
 const NEXT_STEPS: Record<RefundOutcome, string> = {
   APPROVED: 'The refund goes back to your original payment method within 5 to 10 business days.',
-  DENIED: "If you think this isn't right, reply here and a support agent will take a look.",
+  DENIED: "If you think this isn't right, you can ask for a support agent to review it from this page.",
   ESCALATED: "A support agent will review this and follow up within 1 business day. You'll see the outcome here.",
 };
 

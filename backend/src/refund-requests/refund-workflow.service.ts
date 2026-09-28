@@ -20,6 +20,11 @@ import type { PolicyDocument } from '../policy/policy-loader.js';
 import { POLICY_DOCUMENT } from '../policy/policy.tokens.js';
 import { HistoryService } from './history.service.js';
 import { RefundRequestsRepository } from './refund-requests.repository.js';
+import { approvalRefundCents, canRequestReview } from './review-rules.js';
+
+const MAX_MESSAGES = 12;
+const OFF_TOPIC_REPLY =
+  "I'm set up to help with refund requests. If you'd like a refund for an order, tell me which order and what's wrong with it.";
 
 function toOrderContext(order: OrderDocument): OrderContext {
   return {
@@ -103,7 +108,7 @@ export class RefundWorkflowService {
     const orderContexts = await this.resolveOrderContexts(customerId, request.orderNumber);
     const conversation: ConversationTurn[] = request.messages
       .filter((m) => m.role === 'customer' || m.role === 'assistant')
-      .slice(-12)
+      .slice(-MAX_MESSAGES)
       .map((m) => ({ role: m.role === 'customer' ? 'customer' : 'assistant', content: m.content }));
 
     const extraction = await this.extractor.extract(orderContexts, conversation);
@@ -128,30 +133,27 @@ export class RefundWorkflowService {
       }
     }
 
-    if (extraction.value.intent === 'order_question') {
-      request.messages.push({
-        id: randomUUID(),
-        role: 'assistant',
-        content: renderOrderQuestionAnswer(orderContexts, extraction.value.orderNumber),
-        createdAt: now,
-      });
-      await request.save();
-      return request;
-    }
-
-    if (extraction.value.intent === 'other') {
-      request.messages.push({
-        id: randomUUID(),
-        role: 'assistant',
-        content: "I'm set up to help with refund requests. If you'd like a refund for an order, tell me which order and what's wrong with it.",
-        createdAt: now,
-      });
+    if (extraction.value.intent === 'order_question' || extraction.value.intent === 'other') {
+      const answer =
+        extraction.value.intent === 'order_question'
+          ? renderOrderQuestionAnswer(orderContexts, extraction.value.orderNumber)
+          : OFF_TOPIC_REPLY;
+      this.replyOrEscalate(request, answer, now);
       await request.save();
       return request;
     }
 
     if (extraction.value.missing.length > 0) {
-      await this.handleIncompleteClaim(request, extraction.value.clarifyingQuestion, now);
+      request.clarificationCount += 1;
+      if (request.clarificationCount > this.policyDoc.policy.maxClarifyingQuestions) {
+        this.escalateUnresolved(request, now, 'Escalated after repeated clarifying questions went unanswered clearly.');
+      } else {
+        this.replyOrEscalate(
+          request,
+          extraction.value.clarifyingQuestion ?? 'Could you share a bit more detail about the order and the issue?',
+          now,
+        );
+      }
       await request.save();
       return request;
     }
@@ -174,7 +176,7 @@ export class RefundWorkflowService {
     }
 
     const now = this.clock.now();
-    const refundCents = outcome === 'APPROVED' ? (request.evaluation?.refundableCents ?? 0) : 0;
+    const refundCents = outcome === 'APPROVED' ? approvalRefundCents(request) : 0;
     request.resolution = {
       outcome,
       refundCents,
@@ -202,6 +204,39 @@ export class RefundWorkflowService {
     return request;
   }
 
+  /**
+   * Sends an automatic denial to an agent at the customer's request. The
+   * system's decision stays on record; only the resolution is reopened.
+   */
+  async requestReview(customerId: Types.ObjectId, reference: string): Promise<RefundRequestDocument> {
+    const request = await this.repo.findByReferenceForCustomer(reference, customerId);
+    if (!request) {
+      throw new NotFoundException(`Refund request ${reference} not found`);
+    }
+    if (!canRequestReview(request)) {
+      throw new ConflictException(`${reference} can't be sent for review.`);
+    }
+
+    const now = this.clock.now();
+    request.reviewRequestedAt = now;
+    request.resolution = undefined;
+    request.status = 'awaiting_review';
+    request.timeline.push({
+      type: 'review_requested',
+      detail: 'Customer asked for a person to review the automatic denial.',
+      at: now,
+    });
+    request.messages.push({
+      id: randomUUID(),
+      role: 'assistant',
+      content: `I've sent this to a support agent for a second look - reference ${request.reference}. ${nextStepsFor('ESCALATED')}`,
+      createdAt: now,
+    });
+
+    await request.save();
+    return request;
+  }
+
   private async resolveOrderContexts(customerId: Types.ObjectId, orderNumber?: string): Promise<OrderContext[]> {
     if (orderNumber) {
       const order = await this.orders.findByOrderNumberForCustomer(orderNumber, customerId);
@@ -211,34 +246,27 @@ export class RefundWorkflowService {
     return orders.map(toOrderContext);
   }
 
-  private async handleIncompleteClaim(
-    request: RefundRequestDocument,
-    clarifyingQuestion: string | null,
-    now: Date,
-  ): Promise<void> {
-    request.clarificationCount += 1;
-
-    if (request.clarificationCount > this.policyDoc.policy.maxClarifyingQuestions) {
-      request.decision = { outcome: 'ESCALATED', reasonCodes: ['INSUFFICIENT_DETAILS'], decidedAt: now };
-      request.status = 'awaiting_review';
-      request.timeline.push({
-        type: 'escalated',
-        detail: 'Escalated after repeated clarifying questions went unanswered clearly.',
-        at: now,
-      });
-      request.messages.push({
-        id: randomUUID(),
-        role: 'assistant',
-        content: `Thanks for the details so far. I've sent this to a support agent to sort out the rest - reference ${request.reference}. ${nextStepsFor('ESCALATED')}`,
-        createdAt: now,
-      });
+  /**
+   * Replies without deciding anything, unless that reply would fill the
+   * conversation's last slot - then a person takes over instead of the
+   * chat going on indefinitely without a claim.
+   */
+  private replyOrEscalate(request: RefundRequestDocument, content: string, now: Date): void {
+    if (request.messages.length >= MAX_MESSAGES - 1) {
+      this.escalateUnresolved(request, now, 'Escalated after the conversation reached its message limit without a complete claim.');
       return;
     }
+    request.messages.push({ id: randomUUID(), role: 'assistant', content, createdAt: now });
+  }
 
+  private escalateUnresolved(request: RefundRequestDocument, now: Date, detail: string): void {
+    request.decision = { outcome: 'ESCALATED', reasonCodes: ['INSUFFICIENT_DETAILS'], decidedAt: now };
+    request.status = 'awaiting_review';
+    request.timeline.push({ type: 'escalated', detail, at: now });
     request.messages.push({
       id: randomUUID(),
       role: 'assistant',
-      content: clarifyingQuestion ?? 'Could you share a bit more detail about the order and the issue?',
+      content: `Thanks for the details so far. I've sent this to a support agent to sort out the rest - reference ${request.reference}. ${nextStepsFor('ESCALATED')}`,
       createdAt: now,
     });
   }
@@ -284,6 +312,7 @@ export class RefundWorkflowService {
       checks: evaluation.checks,
       lines: evaluation.lines,
       refundableCents: evaluation.refundableCents,
+      claimedCents: evaluation.claimedCents,
     };
     request.decision = { outcome: evaluation.outcome, reasonCodes: evaluation.reasonCodes, decidedAt: now };
 

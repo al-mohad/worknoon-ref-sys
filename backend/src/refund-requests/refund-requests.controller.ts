@@ -57,4 +57,10 @@ export class RefundRequestsController {
     );
     return toCustomerView(request);
   }
+
+  @Post(':reference/review-request')
+  async requestReview(@CurrentUser() user: AuthenticatedUser, @Param('reference') reference: string) {
+    const request = await this.workflow.requestReview(new Types.ObjectId(user.id), reference);
+    return toCustomerView(request);
+  }
 }

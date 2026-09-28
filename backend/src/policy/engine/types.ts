@@ -132,5 +132,7 @@ export interface Evaluation {
   checks: Check[];
   lines: LineResult[];
   refundableCents: number;
+  /** Value of every claimed item, denied or not - what an agent's approval of a disputed denial pays. */
+  claimedCents: number;
   reasonCodes: ReasonCode[];
 }

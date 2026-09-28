@@ -125,6 +125,9 @@ export class Evaluation {
 
   @Prop({ required: true })
   refundableCents!: number;
+
+  @Prop({ required: true, default: 0 })
+  claimedCents!: number;
 }
 const EvaluationSchema = SchemaFactory.createForClass(Evaluation);
 
@@ -263,6 +266,10 @@ export class RefundRequest {
 
   @Prop({ required: true, default: 0 })
   clarificationCount!: number;
+
+  /** Set once, when a customer asks a person to look again at an automatic denial. */
+  @Prop()
+  reviewRequestedAt?: Date;
 }
 
 export type RefundRequestDocument = HydratedDocument<RefundRequest>;
