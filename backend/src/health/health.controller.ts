@@ -1,9 +1,9 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectConnection } from '@nestjs/mongoose';
 import type { Connection } from 'mongoose';
 import { Public } from '../auth/public.decorator.js';
-import { LLM_CLIENT, type LlmClient } from '../ai/llm/llm-client.port.js';
+import { AiStatusService } from '../ai/llm/ai-status.service.js';
 
 const CONNECTION_STATES: Record<number, string> = {
   0: 'disconnected',
@@ -18,16 +18,17 @@ const CONNECTION_STATES: Record<number, string> = {
 export class HealthController {
   constructor(
     @InjectConnection() private readonly connection: Connection,
-    @Inject(LLM_CLIENT) private readonly llm: LlmClient,
+    private readonly aiStatus: AiStatusService,
   ) {}
 
   @Get()
   get() {
     const dbState = CONNECTION_STATES[this.connection.readyState] ?? 'unknown';
+    const ai = this.aiStatus.snapshot();
     return {
       status: dbState === 'connected' ? 'ok' : 'degraded',
       database: dbState,
-      ai: { provider: this.llm.provider, model: this.llm.model, mode: this.llm.model === 'none' ? 'rules_only' : 'live' },
+      ai: { mode: ai.mode, provider: ai.provider, model: ai.model },
     };
   }
 }
