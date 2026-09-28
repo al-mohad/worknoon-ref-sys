@@ -3,8 +3,8 @@ import type { OrderStatus } from '../schemas/order.schema.js';
 
 /**
  * Everything below is defined as day offsets from "now" and resolved at
- * seed time, so the 15 scenarios in docs/design.md section 4 hold
- * whenever the stack is started - see daysAgo() in run-seed.ts.
+ * seed time, so the 15 scenarios in the README hold whenever the stack
+ * is started - see daysAgo() in run-seed.ts.
  */
 
 export interface SeedCustomer {

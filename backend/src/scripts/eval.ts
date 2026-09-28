@@ -1,9 +1,7 @@
 /**
- * Runs the 15 seeded scenarios from docs/design.md section 4, plus an
- * adversarial prompt set, against a live instance of the API (started
- * separately - this script only calls it over HTTP). It's the check
- * described in docs/design.md section 11: run before recording the demo,
- * and its output goes in the README.
+ * Runs the 15 seeded scenarios from the README, plus an adversarial
+ * prompt set, against a live instance of the API (started separately -
+ * this script only calls it over HTTP). Run it before recording the demo.
  *
  * Usage: npm run eval (defaults to http://localhost:3000/api/v1)
  *        EVAL_API_BASE=http://localhost:3000/api/v1 npm run eval
@@ -19,8 +17,8 @@ interface Scenario {
   expect: 'APPROVED' | 'DENIED' | 'ESCALATED' | 'CLARIFY';
   /**
    * Some scenarios need per-item reasoning or disambiguation a keyword
-   * match can't do (see HeuristicExtractor in docs/design.md section 6)
-   * - a real LLM resolves them in one turn, the rules-only fallback
+   * match can't do (see HeuristicExtractor) - a real LLM resolves them
+   * in one turn, the rules-only fallback
    * reasonably asks a question or escalates instead. Listed here so the
    * eval only accepts that alternate outcome when the API is actually
    * running without a provider key.
@@ -99,7 +97,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Sign-in is throttled to 10/min per IP (see docs/design.md section 7) -
+// Sign-in is throttled to 10/min per IP -
 // this evaluation run signs in as more than 10 distinct customers, so it
 // paces itself against that same limit rather than tripping it.
 const SIGN_IN_WINDOW_MS = 60_000;

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Anthropic's strict tool mode rejects a handful of JSON Schema keywords
 // (length/count bounds, and the top-level $schema pointer). zod still
-// enforces them after the call - see docs/design.md section 6.
+// enforces them after the call.
 const UNSUPPORTED_KEYS = new Set([
   '$schema',
   'minLength',

@@ -22,7 +22,7 @@ const MAX_REPLY_LENGTH = 1_200;
  * customer: it has to agree with the decision the policy engine actually
  * made, carry the right amount and reference, stay short, and not leak
  * the canary token planted in the system prompt. Any failure swaps in a
- * template - see docs/design.md section 7.
+ * template.
  */
 export function checkReply(reply: string, facts: ReplyFacts): ReplyGuardResult {
   const failedChecks: string[] = [];

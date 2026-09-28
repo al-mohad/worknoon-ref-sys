@@ -11,7 +11,7 @@ import {
  * Used when no provider key is configured. Every call fails immediately
  * with the same error the real adapters raise on an outage, so the rest
  * of the app takes the one fallback path whether the model is down or was
- * never configured - see docs/design.md section 6.
+ * never configured.
  */
 @Injectable()
 export class NoneAdapter implements LlmClient {

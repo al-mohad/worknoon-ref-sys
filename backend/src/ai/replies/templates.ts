@@ -13,7 +13,7 @@ const ORDER_STATUS_TEXT: Record<string, string> = {
  * Customer-facing text for each reason code, written and reviewed once by
  * a person rather than generated per request. Reasons and next steps
  * shown to a customer always come from here, never from a customer's own
- * words - see docs/design.md section 6.
+ * words.
  */
 const REASON_TEXT: Record<ReasonCode, string> = {
   ORDER_CANCELLED: 'that order was cancelled, so there is nothing to refund',

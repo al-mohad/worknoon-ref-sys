@@ -9,8 +9,7 @@ interface WeightedPattern {
  * either one strong signal or two weaker ones before it's flagged, which
  * keeps ordinary complaints ("please ignore the scuffs on the box, the
  * item itself is broken") from tripping the detector on the word "ignore"
- * alone. This result is a signal recorded on the request, not a gate - see
- * docs/design.md section 7.
+ * alone. This result is a signal recorded on the request, not a gate.
  */
 const PATTERNS: WeightedPattern[] = [
   {

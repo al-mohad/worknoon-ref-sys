@@ -4,8 +4,7 @@ import { canRequestReview } from '../review-rules.js';
 
 /**
  * What a customer sees: never the policy checks, AI metadata, or signals
- * that fed the decision - only the conversation and the outcome. See
- * docs/design.md section 8.
+ * that fed the decision - only the conversation and the outcome.
  */
 export function toCustomerView(request: RefundRequestDocument) {
   const finalOutcome = request.resolution?.outcome ?? request.decision?.outcome;

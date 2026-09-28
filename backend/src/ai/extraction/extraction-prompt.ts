@@ -3,8 +3,7 @@ import type { ConversationTurn, OrderContext } from './extraction.types.js';
 /**
  * The extraction model never sees the refund policy - it only classifies
  * what the customer said. Keeping eligibility out of this prompt removes
- * any pull toward shading a classification toward an outcome. See
- * docs/design.md section 6.
+ * any pull toward shading a classification toward an outcome.
  */
 export function buildExtractionSystemPrompt(canary: string): string {
   return `You read a customer support conversation about a possible refund and record what you understood by calling the record_refund_claim tool. You do not decide whether a refund is approved - that is handled separately.

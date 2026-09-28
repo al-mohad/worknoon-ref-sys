@@ -12,8 +12,10 @@ import type { Check, Evaluation, EvaluationInput, LineOutcome, LineResult } from
  * Runs every rule against the claim and combines the results with a fixed
  * precedence: a request-level denial beats everything, then "every item
  * denied" also denies the whole request, then any remaining escalation
- * wins, and only a claim with nothing left to flag is approved. See
- * docs/design.md section 5 for why denials outrank escalations.
+ * wins, and only a claim with nothing left to flag is approved. Denials
+ * outrank escalations because they rest on facts a reviewer can't change
+ * (dates, final-sale flags, order state); a customer who disagrees can
+ * still ask for a review afterwards.
  */
 export function evaluate(input: EvaluationInput): Evaluation {
   const checks: Check[] = [];

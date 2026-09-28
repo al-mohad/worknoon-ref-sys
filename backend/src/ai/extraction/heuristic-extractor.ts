@@ -32,8 +32,8 @@ function itemMatchesText(itemName: string, lowerCaseText: string): boolean {
 /**
  * Used only when the LLM is unavailable or its output fails validation.
  * Keyword matching over the visible order data is deliberately simple and
- * English-only - see docs/design.md section 6 for why that trade-off is
- * acceptable here.
+ * English-only. It only has to keep a conversation moving while the model
+ * is unavailable, not match it.
  */
 @Injectable()
 export class HeuristicExtractor {

@@ -5,7 +5,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # --- build: compile TypeScript with tsc (real decorator-metadata emission,
-#     required by @nestjs/mongoose - see docs/design.md's fix(database) commit) ---
+#     required by @nestjs/mongoose) ---
 FROM deps AS build
 WORKDIR /app
 COPY . .

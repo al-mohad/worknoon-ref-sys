@@ -65,7 +65,7 @@ export class ClaimExtractorService {
    * to actually belong to the customer, or it's dropped and treated as
    * missing rather than passed through. This is what stops a claim from
    * referencing another customer's order even if the model were talked
-   * into naming one. See docs/design.md section 7.
+   * into naming one.
    */
   private validateAgainstOrders(raw: RecordRefundClaim, orders: OrderContext[]): ExtractionResult {
     const missing = new Set(raw.missing);

@@ -5,7 +5,7 @@ import { REFUND_REASONS } from '../../policy/engine/types.js';
  * The one tool the extraction model is allowed to call. Its output is
  * still untrusted: `ClaimExtractorService` checks every order number, SKU
  * and quantity against the customer's own orders before anything here is
- * used - see docs/design.md section 6.
+ * used.
  */
 export const recordRefundClaim = z.object({
   intent: z.enum(['refund_request', 'order_question', 'other']),

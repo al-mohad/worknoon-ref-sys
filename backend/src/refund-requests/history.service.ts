@@ -10,7 +10,7 @@ export class HistoryService {
   /**
    * Refund history is derived from other refund_requests rather than
    * stored as a running counter, so there is one source of truth and no
-   * risk of a counter drifting out of sync. See docs/design.md section 3.
+   * risk of a counter drifting out of sync.
    */
   async build(
     orderNumber: string,

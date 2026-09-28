@@ -2,8 +2,7 @@ import type { z } from 'zod';
 
 /**
  * Everything outside the `ai/llm` adapters talks to this interface only -
- * no Anthropic or OpenAI SDK types leak past it. See docs/design.md
- * section 6.
+ * no Anthropic or OpenAI SDK types leak past it.
  */
 export interface LlmClient {
   readonly provider: 'anthropic' | 'openai';
