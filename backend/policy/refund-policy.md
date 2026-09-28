@@ -18,7 +18,7 @@ date instead.
 
 Items marked "final sale" at checkout can't be refunded for a change of
 mind. If a final sale item arrives damaged, defective, is the wrong item,
-doesn't match its listing, or never arrives, we'll still review it — that
+doesn't match its listing, or never arrives, we'll still review it. That
 kind of request goes to a support agent rather than being auto-approved.
 
 ## Lost or delayed packages
@@ -42,7 +42,7 @@ Some requests are always reviewed by a person before a refund goes out:
 - The refund amount is **over $500**.
 - You've had **3 or more approved refunds in the last 90 days**.
 - The final-sale exceptions above.
-- The order hasn't shipped yet — we'll cancel it instead of refunding it
+- The order hasn't shipped yet. We'll cancel it instead of refunding it
   after delivery.
 - Anything that looks inconsistent with your order record, including
   messages that try to instruct our support system directly rather than
