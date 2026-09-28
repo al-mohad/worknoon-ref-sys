@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AiStatusBadge } from '../../components/AiStatusBadge.tsx';
 import { Badge, outcomeTone, statusTone } from '../../components/Badge.tsx';
 import { Button } from '../../components/Button.tsx';
 import { Card, CardBody } from '../../components/Card.tsx';
@@ -44,9 +45,10 @@ export function Dashboard() {
   if (flagged) params.set('flagged', 'true');
   if (q) params.set('q', q);
 
-  const { data: list } = useQuery({
+  const { data: list, isPending } = useQuery({
     queryKey: ['admin-refund-requests', status, flagged, q],
     queryFn: () => api.get<{ items: AdminListItem[] }>(`/admin/refund-requests?${params.toString()}`),
+    placeholderData: keepPreviousData,
     refetchInterval: 5_000,
   });
 
@@ -60,6 +62,9 @@ export function Dashboard() {
         <Button variant="ghost" onClick={signOut}>
           Sign out
         </Button>
+      </div>
+      <div className="mt-3">
+        <AiStatusBadge />
       </div>
 
       {metrics && (
@@ -139,6 +144,13 @@ export function Dashboard() {
                 <td className="px-4 py-2 text-slate-500">{formatDateTime(item.createdAt)}</td>
               </tr>
             ))}
+            {isPending && (
+              <tr>
+                <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
+                  Loading requests...
+                </td>
+              </tr>
+            )}
             {list?.items.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-6 text-center text-slate-500">

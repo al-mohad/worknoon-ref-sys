@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AiStatusBadge } from '../../components/AiStatusBadge.tsx';
 import { Badge, outcomeTone, statusTone } from '../../components/Badge.tsx';
 import { Button } from '../../components/Button.tsx';
 import { Card, CardBody, CardHeader } from '../../components/Card.tsx';
+import { TypingIndicator } from '../../components/TypingIndicator.tsx';
 import { api } from '../../lib/api.ts';
 import { useAuth } from '../../lib/auth.tsx';
 import { formatDateTime, outcomeLabel } from '../../lib/format.ts';
@@ -46,7 +48,11 @@ export function SupportHome() {
         </div>
       </div>
 
-      <Card className="mt-6">
+      <div className="mt-4">
+        <AiStatusBadge />
+      </div>
+
+      <Card className="mt-4">
         <CardHeader>Start a new refund request</CardHeader>
         <CardBody>
           <form
@@ -67,6 +73,16 @@ export function SupportHome() {
               {createRequest.isPending ? 'Sending...' : 'Send'}
             </Button>
           </form>
+          {createRequest.isPending && (
+            <div className="mt-4 flex flex-col gap-3">
+              <div className="flex justify-end">
+                <div className="max-w-[85%] rounded-2xl bg-slate-900/80 px-4 py-2 text-sm text-white">
+                  <p className="whitespace-pre-wrap">{createRequest.variables}</p>
+                </div>
+              </div>
+              <TypingIndicator />
+            </div>
+          )}
           {createRequest.isError && (
             <p className="mt-2 text-sm text-rose-600">Something went wrong sending that. Try again.</p>
           )}

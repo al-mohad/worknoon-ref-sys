@@ -5,7 +5,14 @@ import { Card, CardBody, CardHeader } from '../../components/Card.tsx';
 import { api } from '../../lib/api.ts';
 import type { AdminDetail } from '../../lib/types.ts';
 
-export function ReviewPanel({ reference }: { reference: string }) {
+interface ReviewPanelProps {
+  reference: string;
+  approvalAmount: string;
+  approvalRefundCents: number;
+  reviewRequested: boolean;
+}
+
+export function ReviewPanel({ reference, approvalAmount, approvalRefundCents, reviewRequested }: ReviewPanelProps) {
   const queryClient = useQueryClient();
   const [note, setNote] = useState('');
 
@@ -26,11 +33,29 @@ export function ReviewPanel({ reference }: { reference: string }) {
     <Card>
       <CardHeader>Review</CardHeader>
       <CardBody className="space-y-3">
+        {reviewRequested && (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            The customer asked for a person to review this automatic denial.
+          </p>
+        )}
+        <p className="text-sm text-slate-600">
+          {approvalRefundCents > 0 ? (
+            <>
+              Approving refunds <strong>{approvalAmount}</strong>.
+            </>
+          ) : (
+            'No claim was completed in chat, so approving records the decision without a refund amount.'
+          )}
+        </p>
+        <label className="block text-sm text-slate-700" htmlFor={`note-${reference}`}>
+          Note for the record
+        </label>
         <textarea
+          id={`note-${reference}`}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={3}
-          placeholder="Note for the record (required, at least 10 characters)"
+          placeholder="Required, at least 10 characters"
           className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
         />
         <div className="flex gap-2">

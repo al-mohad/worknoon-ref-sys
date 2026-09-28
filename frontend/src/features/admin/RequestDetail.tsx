@@ -110,7 +110,6 @@ export function RequestDetail() {
                     <span>
                       {step.step} &middot; {step.provider}
                       {step.model ? ` (${step.model})` : ''} &middot; {step.status}
-                      {step.usedFallback ? ' (fallback)' : ''}
                     </span>
                     <span>{step.latencyMs}ms</span>
                   </div>
@@ -150,7 +149,16 @@ export function RequestDetail() {
           </Card>
         </div>
 
-        <div>{req.status === 'awaiting_review' && <ReviewPanel reference={req.reference} />}</div>
+        <div>
+          {req.status === 'awaiting_review' && (
+            <ReviewPanel
+              reference={req.reference}
+              approvalAmount={req.approvalRefundAmount}
+              approvalRefundCents={req.approvalRefundCents}
+              reviewRequested={!!req.reviewRequestedAt}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

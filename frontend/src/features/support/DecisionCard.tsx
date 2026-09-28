@@ -1,8 +1,25 @@
 import { Badge, outcomeTone } from '../../components/Badge.tsx';
+import { Button } from '../../components/Button.tsx';
 import { outcomeLabel } from '../../lib/format.ts';
 import type { DecisionView } from '../../lib/types.ts';
 
-export function DecisionCard({ decision, reference }: { decision: DecisionView; reference: string }) {
+interface DecisionCardProps {
+  decision: DecisionView;
+  reference: string;
+  canRequestReview?: boolean;
+  requestingReview?: boolean;
+  onRequestReview?: () => void;
+}
+
+const LINE_TONE = { approved: 'APPROVED', denied: 'DENIED', escalated: 'ESCALATED' } as const;
+
+export function DecisionCard({
+  decision,
+  reference,
+  canRequestReview = false,
+  requestingReview = false,
+  onRequestReview,
+}: DecisionCardProps) {
   const shown = decision.finalOutcome ?? decision.outcome;
 
   return (
@@ -20,12 +37,18 @@ export function DecisionCard({ decision, reference }: { decision: DecisionView; 
             <span>
               {item.name} &times;{item.quantity}
             </span>
-            <Badge tone={outcomeTone(item.result === 'escalated' ? 'ESCALATED' : item.result === 'approved' ? 'APPROVED' : 'DENIED')}>
-              {item.result}
-            </Badge>
+            <Badge tone={outcomeTone(LINE_TONE[item.result])}>{item.result}</Badge>
           </li>
         ))}
       </ul>
+      {canRequestReview && onRequestReview && (
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+          <p className="text-sm text-slate-500">Think this isn't right?</p>
+          <Button variant="secondary" disabled={requestingReview} onClick={onRequestReview}>
+            {requestingReview ? 'Sending...' : 'Ask an agent to review'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

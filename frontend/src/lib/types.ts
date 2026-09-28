@@ -44,8 +44,17 @@ export interface RefundRequestCustomerView {
   reference: string;
   status: RequestStatus;
   orderNumber: string | null;
+  canRequestReview: boolean;
   messages: Message[];
   decision: DecisionView | null;
+}
+
+export type AiMode = 'live' | 'degraded' | 'rules_only';
+
+export interface Health {
+  status: 'ok' | 'degraded';
+  database: string;
+  ai: { mode: AiMode; provider: 'anthropic' | 'openai' | null; model: string | null };
 }
 
 export interface RefundRequestSummary {
@@ -115,6 +124,9 @@ export interface AdminDetail {
     facts: unknown;
   } | null;
   decision: { outcome: RefundOutcome; reasonCodes: string[]; decidedAt: string } | null;
+  reviewRequestedAt: string | null;
+  approvalRefundCents: number;
+  approvalRefundAmount: string;
   resolution: {
     outcome: 'APPROVED' | 'DENIED';
     refundCents: number;
